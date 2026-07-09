@@ -1,0 +1,58 @@
+/* =========================================
+   1. 放大最上面的主标题（你的名字）
+========================================= */
+#site-title {
+
+    font-size: 4rem !important; 
+    margin-bottom: 10px !important;
+}
+
+/* =========================================
+   2. 首页探照灯专属样式（已撑开高度防止遮挡）
+========================================= */
+.spotlight-wrapper {
+
+    position: relative;
+    width: 100%;
+    height: 180px; /* ⚠️ 为了装下你 10rem 的超大字体，把盒子高度撑开 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0; /* 上下留出安全距离，防止和其它文字打架 */
+    cursor: crosshair; /* 鼠标变成准星 */
+}
+
+.text-bg {
+  font-size: 8rem;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.2); /* 飞船背景下的半透明白色 */
+  letter-spacing: 5px;
+}
+
+.text-fg {
+  position: absolute;
+  font-size: 8rem;
+  font-weight: 900;
+  color: #ffffff; /* 探照灯照出纯白高亮 */
+  letter-spacing: 5px;
+  clip-path: circle(0px at 50% 50%);
+  transition: clip-path 0.1s ease-out;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* =========================================
+   3. 放大下面的打字机文字，并推开距离
+========================================= */
+#site-subtitle {
+
+    margin-top: 10px !important;
+}
+
+#subtitle {
+  font-size: 2rem !important; 
+  font-weight: bold;
+}
