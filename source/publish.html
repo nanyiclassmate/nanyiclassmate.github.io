@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>手机日记发布</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --text: #1f2329;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --brand: #2563eb;
+    --brand-dark: #1d4ed8;
+    --ok: #15803d;
+    --err: #b91c1c;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    padding: calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 40px);
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 20px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  }
+  label { display: block; font-size: 13px; font-weight: 600; margin: 0 0 6px; }
+  input[type=text], input[type=password], input[type=date], textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 11px 12px;
+    font: inherit;
+    font-size: 16px;
+    background: #fff;
+    color: var(--text);
+    outline: none;
+  }
+  input:focus, textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+  textarea { min-height: 260px; resize: vertical; line-height: 1.7; }
+  .row { display: flex; gap: 12px; }
+  .row > div { flex: 1; min-width: 0; }
+  .hint { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+  details summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--brand); }
+  details[open] summary { margin-bottom: 12px; }
+  ol { padding-left: 20px; font-size: 13px; color: var(--muted); }
+  ol li { margin-bottom: 5px; }
+  a { color: var(--brand); }
+  button {
+    width: 100%;
+    border: 0;
+    border-radius: 12px;
+    background: var(--brand);
+    color: #fff;
+    font: inherit;
+    font-size: 17px;
+    font-weight: 600;
+    padding: 14px;
+    cursor: pointer;
+  }
+  button:active { background: var(--brand-dark); }
+  button:disabled { opacity: .55; cursor: not-allowed; }
+  #status { margin-top: 12px; font-size: 14px; white-space: pre-wrap; word-break: break-all; }
+  .ok { color: var(--ok); }
+  .err { color: var(--err); }
+  .token-row { display: flex; gap: 8px; align-items: center; }
+  .token-row input { flex: 1; }
+  .small-btn {
+    width: auto; padding: 10px 14px; font-size: 14px; background: #eef2ff; color: var(--brand); flex: none;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>手机日记发布</h1>
+  <p class="sub">写完后点发布，博客会自动构建上线。同一天再次发布会更新当天那篇。</p>
+
+  <div class="card">
+    <details id="tokenBox">
+      <summary>GitHub Token 设置（只需填一次）</summary>
+      <p class="hint" style="margin-top:12px">在手机浏览器打开 github.com → Settings → Developer settings → Personal access tokens → Fine-grained tokens，生成后只勾选本仓库的 <b>Contents: Read and write</b>，有效期建议选 90 天以上。Token 只保存在这台设备的浏览器里，不会上传到任何服务器。</p>
+      <div class="token-row" style="margin-top:10px">
+        <input type="password" id="token" placeholder="github_pat_..." autocomplete="off" autocapitalize="off" spellcheck="false">
+        <button type="button" class="small-btn" id="saveToken">保存</button>
+      </div>
+      <p class="hint" id="tokenHint"></p>
+    </details>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label for="date">日期</label>
+        <input type="date" id="date">
+      </div>
+      <div>
+        <label for="title">标题</label>
+        <input type="text" id="title" placeholder="20261123日记">
+      </div>
+    </div>
+    <p class="hint">标题同时决定文章文件名和网址，建议保持「日期+日记」格式。</p>
+
+    <div class="row" style="margin-top:14px">
+      <div>
+        <label for="categories">分类（用 / 分隔）</label>
+        <input type="text" id="categories" value="随笔/日记">
+      </div>
+      <div>
+        <label for="tags">标签（用 / 分隔）</label>
+        <input type="text" id="tags" value="随心记">
+      </div>
+    </div>
+
+    <div style="margin-top:14px">
+      <label for="body">正文</label>
+      <textarea id="body" placeholder="今天……"></textarea>
+    </div>
+
+    <div style="margin-top:14px">
+      <label for="images">配图（可选，可多选）</label>
+      <input type="file" id="images" accept="image/*" multiple>
+      <p class="hint">图片会插入到文末，正文里也可像平时一样自己写 Markdown。</p>
+    </div>
+  </div>
+
+  <button type="button" id="publish">发布到博客</button>
+  <div id="status"></div>
+
+  <p class="hint" style="margin-top:20px">iPhone 用户：在 Safari 里打开本页，点分享按钮 →「添加到主屏幕」，以后就像 App 一样打开。</p>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var OWNER = 'nanyiclassmate';
+  var REPO = 'nanyiclassmate.github.io';
+  var BRANCH = 'source';
+  var SITE = 'https://nanyiclassmate.github.io';
+  var API = 'https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/';
+  var TOKEN_KEY = 'hexo_publish_token';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var statusEl = $('status');
+
+  function setStatus(text, cls) {
+    statusEl.textContent = text;
+    statusEl.className = cls || '';
+  }
+
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+  function todayParts() {
+    var d = new Date();
+    return {
+      yyyy: d.getFullYear(),
+      mm: pad(d.getMonth() + 1),
+      dd: pad(d.getDate()),
+      hh: pad(d.getHours()),
+      mi: pad(d.getMinutes()),
+      ss: pad(d.getSeconds())
+    };
+  }
+
+  function initDefaults() {
+    var p = todayParts();
+    $('date').value = p.yyyy + '-' + p.mm + '-' + p.dd;
+    $('title').value = p.yyyy + p.mm + p.dd + '日记';
+    var saved = localStorage.getItem(TOKEN_KEY);
+    if (saved) {
+      $('token').value = saved;
+      $('tokenHint').textContent = '本机已保存 Token。';
+    }
+    $('date').addEventListener('change', function () {
+      var v = $('date').value;
+      if (!v) return;
+      var parts = v.split('-');
+      var old = $('title').value;
+      if (/^\d{8}日记$/.test(old)) $('title').value = parts.join('') + '日记';
+    });
+  }
+
+  function saveToken() {
+    var t = $('token').value.trim();
+    if (!t) { localStorage.removeItem(TOKEN_KEY); $('tokenHint').textContent = '已清除本机 Token。'; return; }
+    localStorage.setItem(TOKEN_KEY, t);
+    $('tokenHint').textContent = '已保存到本机浏览器。';
+    $('tokenBox').open = false;
+  }
+
+  function authHeaders() {
+    var t = localStorage.getItem(TOKEN_KEY) || $('token').value.trim();
+    if (!t) throw new Error('请先填写并保存 GitHub Token');
+    return {
+      'Authorization': 'Bearer ' + t,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type': 'application/json'
+    };
+  }
+
+  function b64(str) {
+    return btoa(unescape(encodeURIComponent(str)));
+  }
+
+  function splitList(s, fallback) {
+    var arr = (s || '').split(/[\/，,]/).map(function (x) { return x.trim(); }).filter(Boolean);
+    return arr.length ? arr : [fallback];
+  }
+
+  function safeName(s) {
+    return (s || '').replace(/[\\/:*?"<>|\r\n]/g, '-').trim();
+  }
+
+  function apiFetch(url, options, headers) {
+    return fetch(url, Object.assign({ headers: headers }, options || {})).then(function (res) {
+      if (res.status === 404 && (!options || !options.method || options.method === 'GET')) return null;
+      if (!res.ok) {
+        return res.text().then(function (txt) {
+          var msg = txt;
+          try { msg = JSON.parse(txt).message || txt; } catch (e) {}
+          throw new Error(msg + ' (HTTP ' + res.status + ')');
+        });
+      }
+      return res.json();
+    });
+  }
+
+  function readAsBase64(file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () {
+        var s = String(reader.result);
+        resolve(s.slice(s.indexOf(',') + 1));
+      };
+      reader.onerror = function () { reject(new Error('读取图片失败: ' + file.name)); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function commitFile(path, contentB64, message, headers) {
+    var url = API + path;
+    return apiFetch(url + '?ref=' + BRANCH, null, headers).then(function (existing) {
+      var payload = { message: message, content: contentB64, branch: BRANCH };
+      if (existing && existing.sha) payload.sha = existing.sha;
+      return apiFetch(url, { method: 'PUT', body: JSON.stringify(payload) }, headers);
+    });
+  }
+
+  function publish() {
+    var headers;
+    try { headers = authHeaders(); } catch (e) { setStatus(e.message, 'err'); $('tokenBox').open = true; return; }
+
+    var title = safeName($('title').value.trim());
+    var d = $('date').value;
+    if (!title) { setStatus('请填写标题', 'err'); return; }
+    if (!d) { setStatus('请选择日期', 'err'); return; }
+    var body = $('body').value;
+    if (!body.trim()) { setStatus('正文不能为空', 'err'); return; }
+
+    var parts = d.split('-');
+    var cats = splitList($('categories').value, '随笔');
+    var tags = splitList($('tags').value, '随心记');
+    var fm = '---\n' +
+      'title: ' + title + '\n' +
+      'date: ' + d + ' ' + todayParts().hh + ':' + todayParts().mi + ':' + todayParts().ss + '\n' +
+      'categories:\n' + cats.map(function (c) { return '  - ' + c + '\n'; }).join('') +
+      'tags:\n' + tags.map(function (t) { return '  - ' + t + '\n'; }).join('') +
+      '---\n\n';
+
+    var files = Array.prototype.slice.call($('images').files);
+    var stamp = Date.now();
+    var imagePaths = files.map(function (f, i) {
+      var ext = (f.name.split('.').pop() || 'jpg').toLowerCase();
+      return { name: 'img_' + stamp + '_' + i + '.' + ext, file: f };
+    });
+    var imageText = imagePaths.map(function (img) {
+      return '\n{% asset_img ' + img.name + ' 插图 %}\n';
+    }).join('');
+    var content = fm + body.replace(/\s+$/, '') + '\n' + imageText;
+
+    var btn = $('publish');
+    btn.disabled = true;
+    setStatus('正在上传图片...');
+
+    var chain = Promise.resolve();
+    imagePaths.forEach(function (img) {
+      chain = chain.then(function () {
+        setStatus('正在上传图片 ' + img.name + '...');
+        return readAsBase64(img.file).then(function (b64data) {
+          return commitFile('source/_posts/' + title + '/' + img.name, b64data, 'add image for ' + title, headers);
+        });
+      });
+    });
+
+    chain.then(function () {
+      setStatus('正在提交文章...');
+      return commitFile('source/_posts/' + title + '.md', b64(content), 'post: ' + title, headers);
+    }).then(function () {
+      var postUrl = SITE + '/' + parts[0] + '/' + parts[1] + '/' + parts[2] + '/' + encodeURIComponent(title) + '/';
+      setStatus('发布成功！约 1 分钟后打开：\n' + postUrl + '\n\n构建进度：https://github.com/' + OWNER + '/' + REPO + '/actions', 'ok');
+      $('body').value = '';
+      $('images').value = '';
+    }).catch(function (e) {
+      setStatus('发布失败：' + e.message, 'err');
+    }).then(function () {
+      btn.disabled = false;
+    });
+  }
+
+  initDefaults();
+  $('saveToken').addEventListener('click', saveToken);
+  $('publish').addEventListener('click', publish);
+})();
+</script>
+</body>
+</html>
