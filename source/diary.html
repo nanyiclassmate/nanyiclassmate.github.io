@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>写日记</title>
+<script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.7.1/lunar.min.js"></script>
+<style>
+  :root{--bg:#f5f6f8;--card:#fff;--text:#1f2329;--muted:#6b7280;--line:#e5e7eb;--brand:#2563eb;--brand2:#1d4ed8;--ok:#15803d;--err:#b91c1c}
+  *{box-sizing:border-box}
+  body{margin:0;padding:28px 16px 60px;background:var(--bg);color:var(--text);font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+  .wrap{max-width:820px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:14px}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  button{border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--text);font:inherit;font-size:14px;padding:10px 14px;cursor:pointer}
+  button:hover{border-color:var(--brand);color:var(--brand)}
+  button.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+  button.primary:hover{background:var(--brand2)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  label{display:block;font-size:13px;font-weight:600;margin:0 0 6px}
+  input,select,textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 11px;font:inherit;font-size:14px;background:#fff;color:var(--text);outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+  textarea{min-height:420px;resize:vertical;line-height:1.9;font-size:15px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .grid .wide{grid-column:span 2}
+  .hint{font-size:12px;color:var(--muted);margin:7px 0 0}
+  details summary{cursor:pointer;font-size:14px;font-weight:600;color:var(--brand)}
+  details[open] summary{margin-bottom:14px}
+  #status{margin-top:12px;font-size:14px;white-space:pre-wrap;word-break:break-all}
+  .ok{color:var(--ok)}.err{color:var(--err)}
+  a{color:var(--brand)}
+  @media(max-width:640px){.grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>写日记</h1>
+  <p class="sub">打开就是今天的格式，写完点「发布到博客」即可。点「保存到本地」会下载 .md 文件。</p>
+
+  <div class="toolbar">
+    <button type="button" id="resetBtn">重新生成今日模板</button>
+    <button type="button" id="saveBtn">保存到本地</button>
+    <button type="button" id="copyBtn">复制全文</button>
+    <button type="button" class="primary" id="publishBtn">发布到博客</button>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>文章信息（一般不用改）</summary>
+      <div class="grid" style="margin-top:14px">
+        <div>
+          <label for="date">日期</label>
+          <input type="date" id="date">
+        </div>
+        <div>
+          <label for="time">时间</label>
+          <input type="time" id="time" value="20:00">
+        </div>
+        <div>
+          <label for="weather">天气</label>
+          <select id="weather">
+            <option>晴</option><option>多云</option><option>阴</option>
+            <option>小雨</option><option>中雨</option><option>大雨</option>
+            <option>雪</option><option>风</option>
+          </select>
+        </div>
+        <div>
+          <label for="title">标题 / 文件名</label>
+          <input type="text" id="title">
+        </div>
+        <div class="wide">
+          <label for="categories">分类（用 / 分隔）</label>
+          <input type="text" id="categories" value="随笔/日记">
+        </div>
+        <div class="wide">
+          <label for="tags">标签（用 / 分隔）</label>
+          <input type="text" id="tags" value="随心记">
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <label for="body">正文 <span id="weekday" style="font-weight:400;color:var(--muted)"></span></label>
+    <textarea id="body" spellcheck="false"></textarea>
+    <p class="hint">第一行是农历和天气，后面按「早上 / 中午 / 晚上」写就行。</p>
+  </div>
+
+  <div class="card">
+    <details id="tokenBox">
+      <summary>GitHub Token（电脑上只需填一次）</summary>
+      <p class="hint" style="margin-top:12px">和手机端用同一个 Token 即可：github.com → Settings → Developer settings → Personal access tokens → Fine-grained tokens，只选博客仓库，权限只勾 Contents: Read and write。Token 只存在这个浏览器里。</p>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input type="password" id="token" placeholder="github_pat_..." autocomplete="off" spellcheck="false">
+        <button type="button" id="saveToken">保存</button>
+      </div>
+      <p class="hint" id="tokenHint"></p>
+    </details>
+  </div>
+
+  <div id="status"></div>
+  <p class="hint" style="margin-top:20px">手机也能写：<a href="https://nanyiclassmate.github.io/publish.html" target="_blank" rel="noopener">打开手机发布页</a></p>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var OWNER='nanyiclassmate', REPO='nanyiclassmate.github.io', BRANCH='source';
+  var API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/';
+  var TOKEN_KEY='hexo_desktop_token';
+  var $ = function(id){return document.getElementById(id);};
+  var statusEl=$('status');
+
+  function say(text,cls){statusEl.textContent=text;statusEl.className=cls||'';}
+  function pad(n){return n<10?'0'+n:''+n;}
+  function parseDate(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2],12);}
+  function weekday(s){return ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][parseDate(s).getDay()];}
+
+  function lunarPrefix(dateStr){
+    if(typeof Lunar==='undefined')return null;
+    try{
+      var l=Lunar.fromDate(parseDate(dateStr));
+      var m=l.getMonthInChinese();
+      if(m.charAt(m.length-1)!=='月')m+='月';
+      return '农历'+l.getYearInGanZhi()+'年（'+l.getYearShengXiao()+'年）'+m+l.getDayInChinese();
+    }catch(e){return null;}
+  }
+
+  function firstLine(){
+    var lp=lunarPrefix($('date').value);
+    var head=lp||'农历日期请手动补充';
+    return head+'，【'+$('weather').value+'】，记：';
+  }
+
+  function setFirstLine(text){
+    var lines=$('body').value.split('\n');
+    var isHead=lines.length&&/^(农历|【)/.test(lines[0])&&/，记：$/.test(lines[0]);
+    if(isHead){lines[0]=text;}else{lines.unshift(text);}
+    $('body').value=lines.join('\n');
+  }
+
+  function resetTemplate(){
+    var d=$('date').value;
+    var p=d.split('-');
+    $('title').value=p.join('')+'日记';
+    $('weekday').textContent='（'+weekday(d)+'）';
+    $('body').value=firstLine()+'\n早上，\n\n中午，\n\n晚上，\n';
+    if(lunarPrefix(d)===null){say('农历库没加载出来，第一行请手动补农历日期。','err');}
+    else{say('');}
+  }
+
+  function fullContent(){
+    var cats=($('categories').value||'').split(/[\/，,]/).map(function(x){return x.trim();}).filter(Boolean);
+    var tags=($('tags').value||'').split(/[\/，,]/).map(function(x){return x.trim();}).filter(Boolean);
+    var fm='---\n'+
+      'title: '+$('title').value.trim()+'\n'+
+      'date: '+$('date').value+' '+$('time').value+':00\n'+
+      'categories:\n'+cats.map(function(c){return '- '+c+'\n';}).join('')+
+      'tags:\n'+tags.map(function(t){return '- '+t+'\n';}).join('')+
+      '---\n\n';
+    return fm+$('body').value.replace(/\s+$/,'')+'\n';
+  }
+
+  function token(){
+    var t;
+    try{t=localStorage.getItem(TOKEN_KEY)||$('token').value.trim();}catch(e){t=$('token').value.trim();}
+    if(!t)throw new Error('请先展开「GitHub Token」填写并保存');
+    return t;
+  }
+
+  function saveToken(){
+    var t=$('token').value.trim();
+    try{
+      if(t){localStorage.setItem(TOKEN_KEY,t);$('tokenHint').textContent='已保存到本机浏览器。';$('tokenBox').open=false;}
+      else{localStorage.removeItem(TOKEN_KEY);$('tokenHint').textContent='已清除。';}
+    }catch(e){$('tokenHint').textContent='这个浏览器不让本地存储，本次会话内有效，下次需要重新填。';}
+  }
+
+  function safeName(s){return (s||'').replace(/[\\/:*?"<>|\r\n]/g,'-').trim();}
+  function b64(str){return btoa(unescape(encodeURIComponent(str)));}
+  function headers(){return {'Authorization':'Bearer '+token(),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'};}
+
+  function api(url,opt,h){
+    return fetch(url,Object.assign({headers:h},opt||{})).then(function(r){
+      if(r.status===404&&(!opt||!opt.method||opt.method==='GET'))return null;
+      if(!r.ok)return r.text().then(function(t){var m=t;try{m=JSON.parse(t).message||t;}catch(e){}throw new Error(m+' (HTTP '+r.status+')');});
+      return r.json();
+    });
+  }
+
+  function commit(path,content,h){
+    var url=API+path;
+    return api(url+'?ref='+BRANCH,null,h).then(function(old){
+      var body={message:'post: '+safeName($('title').value.trim()),content:content,branch:BRANCH};
+      if(old&&old.sha)body.sha=old.sha;
+      return api(url,{method:'PUT',body:JSON.stringify(body)},h);
+    });
+  }
+
+  function init(){
+    var p=new Date(), d=p.getFullYear()+'-'+pad(p.getMonth()+1)+'-'+pad(p.getDate());
+    $('date').value=d;
+    $('time').value=pad(p.getHours())+':'+pad(p.getMinutes());
+    try{
+      var t=localStorage.getItem(TOKEN_KEY);
+      if(t){$('token').value=t;$('tokenHint').textContent='本机已保存 Token。';}
+    }catch(e){}
+    resetTemplate();
+
+    $('date').addEventListener('change',resetTemplate);
+    $('weather').addEventListener('change',function(){setFirstLine(firstLine());});
+    $('resetBtn').addEventListener('click',resetTemplate);
+    $('saveToken').addEventListener('click',saveToken);
+
+    $('saveBtn').addEventListener('click',function(){
+      var name=safeName($('title').value.trim())+'.md';
+      var blob=new Blob([fullContent()],{type:'text/markdown;charset=utf-8'});
+      var a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+      document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+      say('已下载 '+name,'ok');
+    });
+
+    $('copyBtn').addEventListener('click',function(){
+      var text=fullContent();
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(function(){say('全文已复制。','ok');},fallback);
+      }else{fallback();}
+      function fallback(){$('body').select();try{document.execCommand('copy');say('全文已复制。','ok');}catch(e){say('复制失败，请手动选中正文复制。','err');}}
+    });
+
+    $('publishBtn').addEventListener('click',function(){
+      var h;
+      try{h=headers();}catch(e){say(e.message,'err');$('tokenBox').open=true;return;}
+      var name=safeName($('title').value.trim());
+      if(!name){say('请先填标题','err');return;}
+      if(!$('body').value.trim()){say('正文不能为空','err');return;}
+      var btn=$('publishBtn');btn.disabled=true;say('正在提交...');
+      commit('source/_posts/'+name+'.md',b64(fullContent()),h).then(function(){
+        var d=$('date').value.split('-');
+        var url='https://'+OWNER+'.github.io/'+d[0]+'/'+d[1]+'/'+d[2]+'/'+encodeURIComponent(name)+'/';
+        say('发布成功！约 1 分钟后打开：\n'+url+'\n\n构建进度：https://github.com/'+OWNER+'/'+REPO+'/actions','ok');
+      }).catch(function(e){say('发布失败：'+e.message,'err');}).then(function(){btn.disabled=false;});
+    });
+  }
+  init();
+})();
+</script>
+</body>
+</html>
