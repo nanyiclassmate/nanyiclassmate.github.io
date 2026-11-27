@@ -47,3 +47,73 @@ margin-top: 10px !important;
 #footer a:hover {
   color: #ffffff !important; 
 }
+
+/* =========================================
+实操题库标准评分表与操作票样式（清晰单元格网格线）
+========================================= */
+#article-container table.exam-table {
+  width: 100%;
+  border-collapse: collapse !important;
+  border: 1.5px solid #94a3b8 !important;
+  margin: 16px 0 24px !important;
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+#article-container table.exam-table th,
+#article-container table.exam-table td {
+  border: 1px solid #cbd5e1 !important;
+  padding: 8px 12px !important;
+  vertical-align: middle !important;
+}
+#article-container table.exam-table thead th {
+  background-color: #f1f5f9 !important;
+  color: #1e293b !important;
+  font-weight: 700;
+  text-align: center;
+  border-bottom: 1.5px solid #94a3b8 !important;
+}
+#article-container table.exam-table td.col-proj,
+#article-container table.exam-table td.col-item {
+  font-weight: 600;
+  background-color: #f8fafc;
+}
+#article-container table.exam-table td.col-score {
+  text-align: center;
+  min-width: 118px;
+  font-weight: 600;
+}
+#article-container table.exam-table td.col-deduct {
+  text-align: center;
+  min-width: 56px;
+}
+#article-container table.exam-table .fail-tag {
+  color: #dc2626;
+  font-weight: 700;
+}
+#article-container table.exam-table tr.ticket-blank td {
+  background-color: #fffbeb;
+  color: #b45309;
+  font-style: italic;
+}
+[data-theme="dark"] #article-container table.exam-table {
+  border-color: #475569 !important;
+}
+[data-theme="dark"] #article-container table.exam-table th,
+[data-theme="dark"] #article-container table.exam-table td {
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #article-container table.exam-table thead th {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] #article-container table.exam-table td.col-proj,
+[data-theme="dark"] #article-container table.exam-table td.col-item {
+  background-color: rgba(30, 41, 59, 0.55);
+}
+[data-theme="dark"] #article-container table.exam-table .fail-tag {
+  color: #f87171;
+}
+[data-theme="dark"] #article-container table.exam-table tr.ticket-blank td {
+  background-color: rgba(180, 83, 9, 0.18);
+  color: #fbbf24;
+}
