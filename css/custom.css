@@ -117,3 +117,35 @@ margin-top: 10px !important;
   background-color: rgba(180, 83, 9, 0.18);
   color: #fbbf24;
 }
+
+/* =========================================
+试卷填空、选择判断括号内答案与简答题答区样式
+========================================= */
+#article-container .ans {
+  color: #1d4ed8;
+  font-weight: 700;
+  padding: 0 4px;
+}
+#article-container .ans-blank {
+  color: #1d4ed8;
+  font-weight: 700;
+  padding: 0 8px;
+  border-bottom: 1.5px solid #2563eb;
+}
+#article-container .qa-ans {
+  margin: 8px 0 20px;
+  padding: 12px 16px;
+  background-color: #f8fafc;
+  border-left: 4px solid #2563eb;
+  border-radius: 4px;
+  line-height: 1.75;
+}
+[data-theme="dark"] #article-container .ans,
+[data-theme="dark"] #article-container .ans-blank {
+  color: #60a5fa;
+  border-bottom-color: #60a5fa;
+}
+[data-theme="dark"] #article-container .qa-ans {
+  background-color: rgba(30, 41, 59, 0.6);
+  border-left-color: #60a5fa;
+}
