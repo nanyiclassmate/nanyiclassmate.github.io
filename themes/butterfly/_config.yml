@@ -11,7 +11,9 @@ nav:
 menu:
   首页: / || fas fa-home
   英语学习: /english/ || fas fa-language
-  铁路知识: /railway/ || fas fa-train
+  铁路知识|| fas fa-train:
+    🚆 铁路知识总览: /railway/
+    ⚡ 高压电工知识: /categories/铁路知识/高压电工知识/
   随笔|| fas fa-pen:
     💑 我们的故事: /2025/03/14/我们的故事/
     📝 日记频道: /categories/随笔/日记/
